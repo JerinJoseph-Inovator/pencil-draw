@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: pencil-draw-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=false
+      - ALLOWED_ORIGINS=http://localhost:3000
+      - MAX_IMAGE_SIZE_MB=10
+      - MAX_RESOLUTION=4096
+      - TEMP_DIR=temp
+      - TEMP_FILE_RETENTION_HOURS=1
+    volumes:
+      - ./backend/temp:/app/temp
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build: ./frontend
+    container_name: pencil-draw-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+networks:
+  default:
+    name: pencil-draw-network
